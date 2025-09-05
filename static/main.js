@@ -265,27 +265,53 @@ async function startNewQuiz() {
     }
 }
 
-async function submitAnswer() {
+function normalizeText(text) {
+    if (!text) return '';
+    
+    // Convert to lowercase first
+    let normalized = text.toLowerCase();
+    
+    // Replace double vowels with macronized versions
+    const replacements = {
+        'aa': 'ā',
+        'ii': 'ī',
+        'ee': 'ē',
+        'oo': 'ō',
+        'uu': 'ū', 
+        'yy': 'ȳ'
+    };
+    
+    // Replace all occurrences of double vowels
+    for (const [pattern, replacement] of Object.entries(replacements)) {
+        normalized = normalized.split(pattern).join(replacement);
+    }
+    
+    // Return the normalized text with macronized vowels, preserving original case and diacritics
+    return normalized;
+}
+
+function submitAnswer() {
     if (!currentQuiz || !answerInput.value.trim()) {
         return;
     }
     
     const userAnswer = answerInput.value.trim();
+    const correctAnswer = currentQuiz.correct_answer || '';
     
     try {
-        // Send answer to server for validation
-        const response = await fetch('/check-answer', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                answer: userAnswer,
-                correct_answer: currentQuiz.correct_answer
-            })
-        });
+        // Normalize both answers for comparison
+        const normalizedUserAnswer = normalizeText(userAnswer);
+        const normalizedCorrectAnswer = normalizeText(correctAnswer);
         
-        const result = await response.json();
+        // Compare the normalized answers case-insensitively
+        const isCorrect = normalizedUserAnswer.toLowerCase() === correctAnswer.toLowerCase();
+        
+        // Create result object similar to what the server would return
+        const result = {
+            correct: isCorrect,
+            user_answer: userAnswer,
+            correct_answer: correctAnswer
+        };
         
         // Show feedback
         feedback.style.display = 'block';
