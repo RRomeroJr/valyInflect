@@ -19,11 +19,43 @@ let selectedFilters = {
     gender: []
 };
 
+// Map frontend values to database values
+const valueMappings = {
+    case: {
+        'nominative': 'nom',
+        'accusative': 'acc',
+        'genitive': 'gen',
+        'dative': 'dat',
+        'locative': 'loc',
+        'instrumental': 'ins',
+        'comitative': 'com',
+        'vocative': 'voc',
+        'adverbial': 'adv'  // Added adverbial case
+    },
+    quantity: {
+        'singular': 'sing',
+        'plural': 'pl',
+        'paucal': 'pau',
+        'collective': 'col'
+    },
+    // Map gender names to match database values
+    gender: {
+        'lunar': 'lun',
+        'solar': 'sol',
+        'terrestrial': 'ter',
+        'aquatic': 'aq'  // Changed from 'aqua' to 'aq' to match database
+    },
+    // These don't need mapping as they match the database
+    declension: {}
+};
+
 // Initialize toolbar functionality
 function initializeToolbar() {
     const filterButtons = document.querySelectorAll('.filter-btn');
     
-    // Set default selections
+    // Use the global valueMappings
+    
+    // Set default selections (using frontend values)
     const defaultSelections = {
         case: ['nominative', 'accusative', 'genitive', 'dative', 'locative', 'instrumental', 'comitative', 'vocative'],
         quantity: ['singular', 'plural'],
@@ -91,35 +123,121 @@ answerInput.addEventListener('keypress', function(event) {
 });
 
 async function startNewQuiz() {
+    console.log('startNewQuiz called');
     // Show loading, hide previous results
     loading.style.display = 'block';
     quizDisplay.style.display = 'none';
     feedback.style.display = 'none';
     nextQuestionBtn.style.display = 'none';
     
+    // Log the current state of selected filters
+    console.log('Selected filters:', JSON.stringify(selectedFilters, null, 2));
+    
     try {
-        // Make request to get quiz question
-        const response = await fetch('/quiz-question');
-        const data = await response.json();
+        // Build query parameters from selected filters
+        const params = new URLSearchParams();
+        
+        // Map frontend values to database values before sending to the server
+        const mapValues = (category, values) => {
+            const mapping = valueMappings[category] || {};
+            return values.map(v => {
+                const mapped = mapping[v];
+                console.log(`Mapping ${category} value: ${v} -> ${mapped || v}`);
+                return mapped !== undefined ? mapped : v;
+            });
+        };
+        
+        // Only add parameters that have selected values
+        if (selectedFilters.case.length > 0) {
+            const dbCases = mapValues('case', selectedFilters.case);
+            params.append('cases', dbCases.join(','));
+        }
+        if (selectedFilters.quantity.length > 0) {
+            const dbQuantities = mapValues('quantity', selectedFilters.quantity);
+            params.append('quantities', dbQuantities.join(','));
+        }
+        if (selectedFilters.declension.length > 0) {
+            params.append('declensions', selectedFilters.declension.join(','));
+        }
+        if (selectedFilters.gender.length > 0) {
+            const dbGenders = mapValues('gender', selectedFilters.gender);
+            params.append('genders', dbGenders.join(','));
+        }
+        
+        // Make request to get quiz question with filters
+        const url = `/quiz-question?${params.toString()}`;
+        console.log('Fetching quiz question with URL:', url);
+        
+        let data;
+        try {
+            const response = await fetch(url);
+            console.log('Received response, status:', response.status);
+            if (!response.ok) {
+                console.error('Error response:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('Error details:', errorText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            data = await response.json();
+            console.log('Received data:', data);
+        } catch (error) {
+            console.error('Error in fetch:', error);
+            throw error; // Re-throw to be caught by the outer try-catch
+        }
         
         // Hide loading
         loading.style.display = 'none';
         
-        if (data.error) {
+        if (data && data.error) {
+            console.error('Error from server:', data.error);
             questionText.textContent = 'Error loading quiz';
             questionDetails.textContent = data.error;
         } else {
             // Store quiz data
             currentQuiz = data;
             
-            // Display the question
+            // Map database values back to display values
+            const caseDisplayMap = {
+                'nom': 'nominative',
+                'acc': 'accusative',
+                'gen': 'genitive',
+                'dat': 'dative',
+                'loc': 'locative',
+                'ins': 'instrumental',
+                'com': 'comitative',
+                'voc': 'vocative',
+                'adv': 'adverbial'
+            };
+            
+            const quantityDisplayMap = {
+                'sing': 'singular',
+                'pl': 'plural',
+                'pau': 'paucal',
+                'col': 'collective'
+            };
+            
+            const genderDisplayMap = {
+                'lun': 'lunar',
+                'sol': 'solar',
+                'ter': 'terrestrial',
+                'aq': 'aquatic',  // Updated to match database
+                'lun/sol': 'lunar/solar',
+                'ter/aq': 'terrestrial/aquatic',
+                'n/a': 'n/a'
+            };
+            
+            const displayCase = caseDisplayMap[data.target_case] || data.target_case;
+            const displayQuantity = quantityDisplayMap[data.target_quantity] || data.target_quantity;
+            const displayGender = genderDisplayMap[data.gender] || data.gender;
+            
+            // Display the question with abbreviated forms
             questionText.textContent = `What is the ${data.target_case}, ${data.target_quantity} of "${data.base_word}"?`;
             questionDetails.innerHTML = `
                 <strong>Base word:</strong> ${data.base_word}<br>
-                <strong>Target case:</strong> ${data.target_case}<br>
-                <strong>Target quantity:</strong> ${data.target_quantity}<br>
+                <strong>Target case:</strong> ${displayCase}<br>
+                <strong>Target quantity:</strong> ${displayQuantity}<br>
                 <strong>Declension:</strong> ${data.declension}<br>
-                <strong>Gender:</strong> ${data.gender}
+                <strong>Gender:</strong> ${displayGender}
             `;
             
             // Reset input and show submit button
