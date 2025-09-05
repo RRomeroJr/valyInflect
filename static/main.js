@@ -8,9 +8,67 @@ const submitBtn = document.getElementById('submitBtn');
 const feedback = document.getElementById('feedback');
 const nextQuestionBtn = document.getElementById('nextQuestionBtn');
 const loading = document.getElementById('loading');
+const practiceToolbar = document.getElementById('practiceToolbar');
 
-// Store current quiz data
+// Store current quiz data and selected filters
 let currentQuiz = null;
+let selectedFilters = {
+    case: [],
+    quantity: [],
+    declension: [],
+    gender: []
+};
+
+// Initialize toolbar functionality
+function initializeToolbar() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    // Set default selections
+    const defaultSelections = {
+        case: ['nominative', 'accusative', 'genitive', 'dative', 'locative', 'instrumental', 'comitative', 'vocative'],
+        quantity: ['singular', 'plural'],
+        declension: ['1st', '2nd', '3rd', '4th', '5th', '6th'],
+        gender: ['lunar', 'solar', 'terrestrial', 'aquatic']
+    };
+    
+    // Apply default selections
+    filterButtons.forEach(button => {
+        const category = button.dataset.category;
+        const value = button.dataset.value;
+        
+        if (defaultSelections[category] && defaultSelections[category].includes(value)) {
+            button.classList.add('selected');
+            if (!selectedFilters[category].includes(value)) {
+                selectedFilters[category].push(value);
+            }
+        }
+        
+        // Add click event listener
+        button.addEventListener('click', function() {
+            // Toggle selection
+            this.classList.toggle('selected');
+            
+            // Update selectedFilters array
+            if (this.classList.contains('selected')) {
+                if (!selectedFilters[category].includes(value)) {
+                    selectedFilters[category].push(value);
+                }
+            } else {
+                const index = selectedFilters[category].indexOf(value);
+                if (index > -1) {
+                    selectedFilters[category].splice(index, 1);
+                }
+            }
+            
+            console.log('Selected filters:', selectedFilters);
+        });
+    });
+    
+    console.log('Default filters applied:', selectedFilters);
+}
+
+// Initialize toolbar when page loads
+document.addEventListener('DOMContentLoaded', initializeToolbar);
 
 // Start quiz event listener
 startQuizBtn.addEventListener('click', startNewQuiz);
@@ -69,8 +127,11 @@ async function startNewQuiz() {
             submitBtn.style.display = 'inline-block';
         }
         
-        // Show the quiz display
+        // Show the practice toolbar and quiz display
+        console.log('Showing toolbar and quiz display');
+        practiceToolbar.style.display = 'block';
         quizDisplay.style.display = 'block';
+        console.log('Toolbar display style:', practiceToolbar.style.display);
         
         // Focus input field after quiz display is shown
         if (currentQuiz) {
@@ -81,6 +142,7 @@ async function startNewQuiz() {
         loading.style.display = 'none';
         questionText.textContent = 'Error';
         questionDetails.textContent = 'Failed to fetch quiz question from server';
+        practiceToolbar.style.display = 'block';
         quizDisplay.style.display = 'block';
     }
 }
