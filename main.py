@@ -247,20 +247,6 @@ async def get_quiz(
             "details": str(e)
         }
 
-@app.post("/check-answer")
-def check_answer(answer_data: dict):
-    """API endpoint to check if the user's answer is correct"""
-    user_answer = answer_data.get("answer", "").strip().lower()
-    correct_answer = answer_data.get("correct_answer", "").strip().lower()
-    
-    is_correct = user_answer == correct_answer
-    
-    return {
-        "correct": is_correct,
-        "user_answer": answer_data.get("answer", ""),
-        "correct_answer": answer_data.get("correct_answer", "")
-    }
-
 if __name__ == "__main__":
     import uvicorn
     import os
