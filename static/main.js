@@ -1,4 +1,8 @@
+// Import mapping functions and data
+import { valueMappings, defaultSelections, mapValues, getDisplayValue } from './searchMaps.js';
+
 // Get references to HTML elements
+//#region HTML Element References
 const startQuizBtn = document.getElementById('startQuizBtn');
 const quizDisplay = document.getElementById('quizDisplay');
 const questionText = document.getElementById('questionText');
@@ -9,6 +13,7 @@ const feedback = document.getElementById('feedback');
 const nextQuestionBtn = document.getElementById('nextQuestionBtn');
 const loading = document.getElementById('loading');
 const practiceToolbar = document.getElementById('practiceToolbar');
+//#endregion
 
 // Store current quiz data and selected filters
 let currentQuiz = null;
@@ -19,49 +24,9 @@ let selectedFilters = {
     gender: []
 };
 
-// Map frontend values to database values
-const valueMappings = {
-    case: {
-        'nominative': 'nom',
-        'accusative': 'acc',
-        'genitive': 'gen',
-        'dative': 'dat',
-        'locative': 'loc',
-        'instrumental': 'ins',
-        'comitative': 'com',
-        'vocative': 'voc',
-        'adverbial': 'adv'  // Added adverbial case
-    },
-    quantity: {
-        'singular': 'sing',
-        'plural': 'pl',
-        'paucal': 'pau',
-        'collective': 'col'
-    },
-    // Map gender names to match database values
-    gender: {
-        'lunar': 'lun',
-        'solar': 'sol',
-        'terrestrial': 'ter',
-        'aquatic': 'aq'  // Changed from 'aqua' to 'aq' to match database
-    },
-    // These don't need mapping as they match the database
-    declension: {}
-};
-
 // Initialize toolbar functionality
 function initializeToolbar() {
     const filterButtons = document.querySelectorAll('.filter-btn');
-    
-    // Use the global valueMappings
-    
-    // Set default selections (using frontend values)
-    const defaultSelections = {
-        case: ['nominative', 'accusative', 'genitive', 'dative', 'locative', 'instrumental', 'comitative', 'vocative'],
-        quantity: ['singular', 'plural'],
-        declension: ['1st', '2nd', '3rd', '4th', '5th', '6th'],
-        gender: ['lunar', 'solar', 'terrestrial', 'aquatic']
-    };
     
     // Apply default selections
     filterButtons.forEach(button => {
@@ -137,30 +102,23 @@ async function startNewQuiz() {
         // Build query parameters from selected filters
         const params = new URLSearchParams();
         
-        // Map frontend values to database values before sending to the server
-        const mapValues = (category, values) => {
-            const mapping = valueMappings[category] || {};
-            return values.map(v => {
-                const mapped = mapping[v];
-                console.log(`Mapping ${category} value: ${v} -> ${mapped || v}`);
-                return mapped !== undefined ? mapped : v;
-            });
-        };
-        
         // Only add parameters that have selected values
         if (selectedFilters.case.length > 0) {
-            const dbCases = mapValues('case', selectedFilters.case);
+            const dbCases = mapValues('case', selectedFilters.case, true);
+            console.log(`Mapping case values: ${selectedFilters.case} -> ${dbCases}`);
             params.append('cases', dbCases.join(','));
         }
         if (selectedFilters.quantity.length > 0) {
-            const dbQuantities = mapValues('quantity', selectedFilters.quantity);
+            const dbQuantities = mapValues('quantity', selectedFilters.quantity, true);
+            console.log(`Mapping quantity values: ${selectedFilters.quantity} -> ${dbQuantities}`);
             params.append('quantities', dbQuantities.join(','));
         }
         if (selectedFilters.declension.length > 0) {
             params.append('declensions', selectedFilters.declension.join(','));
         }
         if (selectedFilters.gender.length > 0) {
-            const dbGenders = mapValues('gender', selectedFilters.gender);
+            const dbGenders = mapValues('gender', selectedFilters.gender, true);
+            console.log(`Mapping gender values: ${selectedFilters.gender} -> ${dbGenders}`);
             params.append('genders', dbGenders.join(','));
         }
         
@@ -196,39 +154,10 @@ async function startNewQuiz() {
             // Store quiz data
             currentQuiz = data;
             
-            // Map database values back to display values
-            const caseDisplayMap = {
-                'nom': 'nominative',
-                'acc': 'accusative',
-                'gen': 'genitive',
-                'dat': 'dative',
-                'loc': 'locative',
-                'ins': 'instrumental',
-                'com': 'comitative',
-                'voc': 'vocative',
-                'adv': 'adverbial'
-            };
-            
-            const quantityDisplayMap = {
-                'sing': 'singular',
-                'pl': 'plural',
-                'pau': 'paucal',
-                'col': 'collective'
-            };
-            
-            const genderDisplayMap = {
-                'lun': 'lunar',
-                'sol': 'solar',
-                'ter': 'terrestrial',
-                'aq': 'aquatic',  // Updated to match database
-                'lun/sol': 'lunar/solar',
-                'ter/aq': 'terrestrial/aquatic',
-                'n/a': 'n/a'
-            };
-            
-            const displayCase = caseDisplayMap[data.target_case] || data.target_case;
-            const displayQuantity = quantityDisplayMap[data.target_quantity] || data.target_quantity;
-            const displayGender = genderDisplayMap[data.gender] || data.gender;
+            // Get display values using the mapping function
+            const displayCase = getDisplayValue('case', data.target_case) || data.target_case;
+            const displayQuantity = getDisplayValue('quantity', data.target_quantity) || data.target_quantity;
+            const displayGender = getDisplayValue('gender', data.gender) || data.gender;
             
             // Display the question with abbreviated forms
             questionText.textContent = `What is the ${data.target_case}, ${data.target_quantity} of "${data.base_word}"?`;
@@ -262,6 +191,7 @@ async function startNewQuiz() {
         questionDetails.textContent = 'Failed to fetch quiz question from server';
         practiceToolbar.style.display = 'block';
         quizDisplay.style.display = 'block';
+        throw error;
     }
 }
 
@@ -339,5 +269,6 @@ function submitAnswer() {
         feedback.style.display = 'block';
         feedback.className = 'feedback incorrect';
         feedback.textContent = 'Error checking answer. Please try again.';
+        throw error;
     }
 }
