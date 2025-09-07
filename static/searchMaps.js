@@ -21,7 +21,19 @@ export const valueMappings = {
         'lunar': 'lun',
         'solar': 'sol',
         'terrestrial': 'ter',
-        'aquatic': 'aq'
+        'aquatic': 'aq',
+        'lunar/solar': 'lun/sol',
+        'terrestrial/aquatic': 'ter/aq'
+    },
+    position: {
+        'prenominal': 'pre',
+        'postnominal': 'post'
+    },
+        d_type: {
+        'Positive': 'pos',
+        'Equal': 'eq',
+        'Comparative': 'comp',
+        'Superlative': 'sup'
     },
     declension: {}
 };
@@ -53,15 +65,27 @@ export const displayMaps = {
         'lun/sol': 'lunar/solar',
         'ter/aq': 'terrestrial/aquatic',
         'n/a': 'n/a'
+    },
+    position: {
+        'pre': 'prepositive',
+        'post': 'postpositive'
+    },
+    d_type: {
+        'pos': 'positive',
+        'eq': 'equative',
+        'comp': 'comparative',
+        'sup': 'superlative',
     }
 };
 
 // Default selections for filters
 export const defaultSelections = {
     case: ['nominative', 'accusative', 'genitive', 'dative', 'locative', 'instrumental', 'comitative', 'vocative'],
-    quantity: ['singular', 'plural'],
+    quantity: ['singular', 'plural', 'paucal', 'collective'],
     declension: ['1st', '2nd', '3rd', '4th', '5th', '6th'],
-    gender: ['lunar', 'solar', 'terrestrial', 'aquatic']
+    gender: ['lunar', 'solar', 'terrestrial', 'aquatic', 'lunar/solar', 'terrestrial/aquatic'],
+    position: ['prepositive', 'postpositive'],
+    d_type: ['positive', 'equative', 'comparative', 'superlative']
 };
 
 // Helper function to map values using the appropriate mapping

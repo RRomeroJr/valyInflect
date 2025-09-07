@@ -148,7 +148,7 @@ def get_noun_form(cases=None, quants=None, declens=None, genders=None):
 @app.get("/")
 def read_root():
     """Redirect to static HTML page"""
-    return RedirectResponse(url="/static/index.html")
+    return RedirectResponse(url="/static/index.html?v=" + str(random.random()))
 
 @app.get("/random-word")
 def get_random_valyrian_word():
@@ -200,7 +200,7 @@ async def get_noun_quiz(
             "details": str(e)
         }
 
-def get_adj_form(adj_classes=None, adj_positions=None, genders=None, quants=None, cases=None):
+def get_adj_form(adj_classes=None, adj_positions=None, genders=None, quants=None, cases=None, adj_d_types=None):
     """Get an adjective quiz question with optional filters"""
     args = locals()
     print(args)
@@ -210,7 +210,7 @@ def get_adj_form(adj_classes=None, adj_positions=None, genders=None, quants=None
     # Build the base query with filters
     query = """
         SELECT DISTINCT a.id, a.base, a.class as class, af.form, af.pos, af.gender,
-        af.quant, af.g_case
+        af.quant, af.g_case, af.d_type
         FROM adjs a
         JOIN adj_forms af ON a.id = af.adj_id
         WHERE af.form != a.base
@@ -239,18 +239,10 @@ def get_adj_form(adj_classes=None, adj_positions=None, genders=None, quants=None
     
     conn.close()
     if not base_result:
-        logging.error(f"No adjective found with following query:\n{query}")
+        logging.error(f"No adjective found with following query:\n{query}\n{params}")
         return None
     
-    return {
-            "base_word": base_result["base"],
-            "target_position": base_result["pos"],
-            "target_gender": base_result["gender"],
-            "target_quantity": base_result["quant"],
-            "target_case": base_result["g_case"],
-            "correct_answer": base_result["form"],
-            "class": base_result["class"],
-        }
+    return base_result
 
 @app.get("/adj-quiz-question")
 async def get_adj_quiz(
@@ -258,35 +250,39 @@ async def get_adj_quiz(
     positions: str = "",
     genders: str = "",
     quants: str = "",
-    cases: str = ""
+    cases: str = "",
+    adj_d_types: str = ""
 ):
     """API endpoint that returns an adjective quiz question with optional filters
     
     Parameters:
-    - classes: Comma-separated list of adjective classes to include
-    - positions: Comma-separated list of positions to include
+    - classes: Comma-separated list of adjective classes to include (e.g., '1,2,3')
+    - positions: Comma-separated list of positions to include (e.g., 'pre,post')
     - genders: Comma-separated list of genders to include (e.g., 'lun,sol')
     - quants: Comma-separated list of quantities to include (e.g., 'sing,pl')
     - cases: Comma-separated list of cases to include (e.g., 'nom,acc')
+    - adj_d_types: Comma-separated list of adjective degree types (e.g., 'pos,comp,sup')
     """
     try:
-        # Convert comma-separated strings to lists, filtering out empty strings
+        # Convert comma-separated strings to lists and filter out empty strings
         class_list = [c.strip() for c in classes.split(",") if c.strip()]
         position_list = [p.strip() for p in positions.split(",") if p.strip()]
         gender_list = [g.strip() for g in genders.split(",") if g.strip()]
         quantity_list = [q.strip() for q in quants.split(",") if q.strip()]
         case_list = [c.strip() for c in cases.split(",") if c.strip()]
+        adj_d_type_list = [d.strip() for d in adj_d_types.split(",") if d.strip()]
         
-        logging.info(f"Fetching adjective quiz question with filters - classes: {class_list}, "
+        print(f"Fetching adjective quiz question with filters - classes: {class_list}, "
                    f"positions: {position_list}, genders: {gender_list}, quantities: {quantity_list}, "
-                   f"cases: {case_list}")
+                   f"cases: {case_list}, adj_d_types: {adj_d_type_list}")
         
         quiz_data = get_adj_form(
-            classes=class_list,
-            positions=position_list,
+            adj_classes=class_list,
+            adj_positions=position_list,
             genders=gender_list,
-            quantities=quantity_list,
-            cases=case_list
+            quants=quantity_list,
+            cases=case_list,
+            adj_d_types=adj_d_type_list
         )
         
         if quiz_data:
@@ -302,8 +298,8 @@ if __name__ == "__main__":
 
     # print(get_foreign_key_column("adj_forms", "adj_positions"))
     # print(COLUMN_TABLES["id"])
-    print(get_adj_quiz_question(cases=["voc"]))
-    sys.exit()
+    # print(get_adj_quiz_question(cases=["voc"]))
+    # sys.exit()
     
     import uvicorn
     import os

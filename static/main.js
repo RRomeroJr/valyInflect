@@ -1,6 +1,7 @@
 // Import mapping functions and data
-import { valueMappings, defaultSelections, mapValues, getDisplayValue } from './searchMaps.js';
-import { nounFilters, displayQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js';
+import { valueMappings, defaultSelections, mapValues, getDisplayValue } from './searchMaps.js?v=0.2';
+import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=0.2';
+import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=0.2';
 
 // Get references to HTML elements
 //#region HTML Element References
@@ -75,16 +76,23 @@ function populateFiltersForWordType(wordType) {
     const existingSections = practiceToolbar.querySelectorAll('.filter-section:not(:nth-of-type(1))');
     existingSections.forEach(section => section.remove());
     
+    let filterElements = [];
+    
     if (wordType === 'noun') {
         // Get filter elements from nouns.js
-        const filterElements = generateNounFilterElements();
-        
-        // Append all filter elements to the practice toolbar
-        filterElements.forEach(element => {
-            practiceToolbar.appendChild(element);
-        });
+        filterElements = generateNounFilterElements();
+    } else if (wordType === 'adjective') {
+        // Get filter elements from adjectives.js
+        filterElements = generateAdjectiveFilterElements();
     }
-    // Add other word type conditions here when needed
+    
+    // Append all filter elements to the practice toolbar
+    filterElements.forEach(element => {
+        practiceToolbar.appendChild(element);
+    });
+    
+    // Apply default selections for the word type
+    applyDefaultSelections(wordType);
 }
 
 // Add event listener for word type buttons
@@ -102,15 +110,44 @@ function initializeWordTypeButtons() {
     });
 }
 
+// Function to apply default selections based on word type
+function applyDefaultSelections(wordType) {
+    let defaults = {};
+    
+    if (wordType === 'noun') {
+        defaults = {
+            ...defaultSelections,
+            ...nounFiltersPresets
+        };
+    } else if (wordType === 'adjective') {
+        defaults = {
+            ...defaultSelections,
+            ...adjFiltersPresets
+        };
+    }
+    
+    // Apply the defaults
+    for (const [category, values] of Object.entries(defaults)) {
+        if (Array.isArray(values)) {
+            values.forEach(value => {
+                const button = document.querySelector(`[data-category="${category}"][data-value="${value}"]`);
+                if (button) {
+                    button.classList.add('selected');
+                }
+            });
+        }
+    }
+}
+
 // Initialize toolbar when page loads
 document.addEventListener('DOMContentLoaded', () => {
     initializeToolbar();
     initializeWordTypeButtons();
     // Initialize with noun filters by default
     const nounButton = document.querySelector('[data-category="wordType"] [data-value="noun"]');
-    // if (nounButton) {
-    //     nounButton.click();
-    // }
+    if (nounButton) {
+        nounButton.click();
+    }
 });
 
 startQuizBtn.addEventListener('click', startNewQuiz);
@@ -141,22 +178,24 @@ async function startNewQuiz() {
     console.log('Current filters:', JSON.stringify(currentFilters, null, 2));
     
     try {
-        // Build query parameters from selected filters
-        // Later we will need to check the word type (noun, adj, etc.)
-        // and use the appropriate param generation function here.
+        // Build query parameters from selected filters based on word type
         const _selectedFilters = getSelectedFilters();
-        let params = null
-        if (_selectedFilters["wordType"] === 'noun') {
+        let params = null;
+        let endpoint = '';
+        
+        if (_selectedFilters.wordType === 'noun') {
             params = makeNounParams(currentFilters);
+            endpoint = '/noun-quiz-question';
         } else if (_selectedFilters.wordType === 'adjective') {
-            throw new Error('Adjective not implemented yet');   
-        } else{
-            console.error('Word type not found in selected filters', _selectedFilters);
-            throw new Error('Word type not found in selected filters', _selectedFilters);
+            params = makeAdjectiveParams(currentFilters);
+            endpoint = '/adj-quiz-question';
+        } else {
+            console.error('Unsupported word type in selected filters', _selectedFilters);
+            throw new Error(`Unsupported word type: ${_selectedFilters.wordType}`);
         }
         
         // Make request to get quiz question with filters
-        const url = `/noun-quiz-question?${params.toString()}`;
+        const url = `${endpoint}?${params.toString()}`;
         console.log('Fetching quiz question with URL:', url);
         
         let data;
@@ -186,17 +225,15 @@ async function startNewQuiz() {
             return;
         }
         
-        // Store and display quiz data using the imported function
-        // Later we will need to check the word type (noun, adj, etc.)
-        // and use the appropriate display function here.
-        let currentQuiz = null;
+        // Store and display quiz data based on word type
+        currentQuiz = null;
         if (_selectedFilters.wordType === 'noun') {
-        currentQuiz = displayQuizQuestion(data, questionText, questionDetails);
+            currentQuiz = displayNounQuizQuestion(data, questionText, questionDetails);
         } else if (_selectedFilters.wordType === 'adjective') {
-            throw new Error('Adjective not implemented yet');
-        } else{
-            console.error('Somehow reached displayQuizQuestion with unknown word type', _selectedFilters);
-            throw new Error('Somehow reached displayQuizQuestion with unknown word type');
+            currentQuiz = displayAdjectiveQuizQuestion(data, questionText, questionDetails);
+        } else {
+            console.error('Unsupported word type in display function', _selectedFilters);
+            throw new Error(`Unsupported word type in display function: ${_selectedFilters.wordType}`);
         }
         // Reset input and show submit button
         answerInput.value = '';
@@ -210,7 +247,7 @@ async function startNewQuiz() {
         
         // Focus input field after quiz display is shown
         if (currentQuiz) {
-            answerInput.focus();
+                answerInput.focus();
         }
         
     } catch (error) {
@@ -240,14 +277,10 @@ function normalizeText(text) {
 }
 
 function submitAnswer() {
-    if (!currentQuiz || !answerInput.value.trim()) {
-        return;
-    }
-    
-    const userAnswer = answerInput.value.trim();
-    const correctAnswer = currentQuiz.form || '';
-    
+    // console.log('submitAnswer called');
     try {
+        const correctAnswer = currentQuiz.form;
+        const userAnswer = answerInput.value.trim();
         // Normalize both answers for comparison
         const normalizedUserAnswer = normalizeText(userAnswer);
         const normalizedCorrectAnswer = normalizeText(correctAnswer);
@@ -280,7 +313,7 @@ function submitAnswer() {
     } catch (error) {
         feedback.style.display = 'block';
         feedback.className = 'feedback incorrect';
-        feedback.textContent = 'Error checking answer. Please try again.';
+        feedback.textContent = error.message;
         throw error;
     }
 }

@@ -1,4 +1,4 @@
-import { getDisplayValue } from "./searchMaps.js";
+import { getDisplayValue } from "./searchMaps.js?v=0.2";
 const nounFilters = {
     case: ['nom', 'acc', 'gen', 'dat', 'loc', 'ins', 'com', 'voc'],
     quantity: ['sing', 'pl', 'pau', 'col'],
@@ -104,4 +104,4 @@ function generateNounFilterElements() {
     return elements;
 }
 
-export { nounFilters, displayQuizQuestion, makeNounParams, generateNounFilterElements };
+export { nounFilters, nounFiltersPresets, displayQuizQuestion, makeNounParams, generateNounFilterElements };
