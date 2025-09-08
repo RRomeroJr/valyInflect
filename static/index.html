@@ -7,23 +7,27 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <!-- Sidebar -->
+<div id="practiceToolbar" class="sidebar">
+    <h3>Practice Filters</h3>
+    <div class="filter-section">
+        <h4>Word Type</h4>
+        <div class="button-group" data-category="wordType">
+            <button class="filter-btn" data-value="noun">Noun</button>
+            <button class="filter-btn" data-value="adjective">Adjective</button>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="info-bar">
+        <button class="info-btn">Info</button>
+    </div>
+    <div class="quiz-area">
         <h1>🐉 Valyrian Word Quiz</h1>
         <p>Test your knowledge of Valyrian declensions!</p>
-        
         <button id="startQuizBtn">Start Quiz</button>
-        
-        <!-- Practice Options Sidebar -->
-        <div id="practiceToolbar" class="sidebar">
-            <h3>Practice Filters</h3>
-            <div class="filter-section">
-                <h4>Word Type</h4>
-                <div class="button-group" data-category="wordType">
-                    <button class="filter-btn" data-value="noun">Noun</button>
-                    <button class="filter-btn" data-value="adjective">Adjective</button>
-                </div>
-            </div>
-        </div>
         <div id="quizDisplay" class="word-display" style="display: none;">
             <div id="questionText" class="word"></div>
             <div id="questionDetails" class="details"></div>
@@ -32,17 +36,19 @@
                 <input type="text" id="answerInput" placeholder="Enter your answer..." />
                 <button id="submitBtn">Submit Answer</button>
             </div>
+                
+                <div id="feedback" class="feedback" style="display: none;"></div>
+                
+                <button id="nextQuestionBtn" style="display: none;">Next Question</button>
+            </div>
             
-            <div id="feedback" class="feedback" style="display: none;"></div>
-            
-            <button id="nextQuestionBtn" style="display: none;">Next Question</button>
-        </div>
-        
-        <div id="loading" class="loading" style="display: none;">
-            Loading...
+            <div id="loading" class="loading" style="display: none;">
+                Loading...
+            </div>
         </div>
     </div>
+</div>
 
-    <script type="module" src="main.js?v=0.2"></script>
+<script type="module" src="main.js?v=0.2"></script>
 </body>
 </html>

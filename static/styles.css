@@ -17,19 +17,59 @@ body {
     padding: 0;
     background-color: var(--bg-dark);
     color: var(--text-primary);
-    display: flex;
     min-height: 100vh;
+    display: flex;
 }
 
-.container {
-    flex: 1;
-    background-color: var(--bg-container);
-    margin: 20px;
-    margin-left: 320px;
+.main-content {
+    margin-left: 280px; /* Same as sidebar width */
+    width: calc(100% - 280px);
+    min-height: 100vh;
     padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px var(--shadow-color);
+    box-sizing: border-box;
+    background-color: var(--bg-container);
+    border-radius: 10px 0 0 10px;
+    box-shadow: 0 0 10px var(--shadow-color);
     text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.info-bar {
+    background-color: var(--bg-darker);
+    box-shadow: 0 2px 5px var(--shadow-color);
+    border-radius: 5px 0 0 5px;
+    margin: -30px -30px 20px -30px;
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 2;
+    height: 50px; /* Fixed height for the info bar */
+    overflow: hidden; /* Ensures child elements stay within bounds */
+}
+
+.info-btn {
+    background-color: var(--accent-green);
+    color: white;
+    border: none;
+    border-radius: 0; /* Remove border radius */
+    padding: 0 20px; /* Horizontal padding only */
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: 100%; /* Fill the height of the info bar */
+    display: flex;
+    align-items: center; /* Center text vertically */
+    justify-content: center; /* Center text horizontally */
+    min-width: 80px; /* Minimum width for the button */
+    margin: 0; /* Remove any default margins */
+}
+
+
+.info-btn:hover {
+    background-color: var(--accent-green-hover);
+    transform: none;
+    box-shadow: none;
 }
 
 h1 {
@@ -51,7 +91,7 @@ button {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-button:hover {
+button:not(.info-btn):hover {
     background-color: var(--accent-green-hover);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
@@ -135,6 +175,7 @@ input[type="text"]:focus {
     left: 0;
     top: 0;
     height: 100vh;
+    z-index: 3;
 }
 
 .sidebar h3 {
@@ -245,8 +286,9 @@ p {
         width: 250px;
     }
     
-    .container {
-        margin-left: 290px;
+    .main-content {
+        margin-left: 250px;
+        width: calc(100% - 250px);
     }
 }
 
