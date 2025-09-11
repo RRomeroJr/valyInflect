@@ -340,3 +340,50 @@ function getSelectedFilters() {
     return selectedFilters;
 }
 console.log("Selected Filters:", getSelectedFilters());
+
+// Language configuration
+let languageMode = 'hv'; // Default language is English
+
+/**
+ * Applies localization to all elements based on the current language mode
+ * Looks for elements with IDs or classes that match keys in localization.json
+ */
+async function applyLocalization() {
+    try {
+        // Fetch the localization data
+        const response = await fetch('localization.json');
+        const translations = await response.json();
+        
+        // Process each translation key
+        Object.entries(translations).forEach(([key, languages]) => {
+            const text = languages[languageMode];
+            if (!text) return; // Skip if translation not available for current language
+            
+            // Try to find element by ID first
+            const elementById = document.getElementById(key);
+            if (elementById) {
+                elementById.innerHTML = text; // Use innerHTML to support HTML content
+                return;
+            }
+            
+            // If no element with matching ID, try class
+            const elementsByClass = document.getElementsByClassName(key);
+            if (elementsByClass.length > 0) {
+                Array.from(elementsByClass).forEach(el => {
+                    el.innerHTML = text; // Use innerHTML to support HTML content
+                });
+            }
+        });
+        
+        console.log(`Localization applied for language: ${languageMode}`);
+    } catch (error) {
+        console.error('Error loading localization:', error);
+    }
+}
+
+// Apply localization when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initializeToolbar();
+    initializeWordTypeButtons();
+    applyLocalization(); // Add this line to apply translations on page load
+});
