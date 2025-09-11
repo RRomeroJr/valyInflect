@@ -20,56 +20,6 @@ const practiceToolbar = document.getElementById('practiceToolbar');
 // Store current quiz data
 let currentQuiz = null;
 
-// Initialize toolbar functionality
-function initializeToolbar() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    
-    // Apply default selections
-    filterButtons.forEach(button => {
-        const category = button.dataset.category;
-        const value = button.dataset.value;
-        
-        if (defaultSelections[category] && defaultSelections[category].includes(value)) {
-            button.classList.add('selected');
-        }
-        
-        // Add click event listener
-        button.addEventListener('click', function() {
-            // Toggle selection
-            this.classList.toggle('selected');
-            
-            // Log current filter state
-            console.log('Selected filters:', getSelectedFilters());
-        });
-    });
-    
-    console.log('Default filters applied:', getSelectedFilters());
-}
-
-/**
- * Collects all selected filter values from the sidebar
- * @returns {Object} An object where keys are filter categories and values are arrays of selected values
- */
-function getFilters() {
-    const filters = {};
-    
-    // Find all button groups in the filter section
-    const buttonGroups = document.querySelectorAll('#filter-section .button-group');
-    
-    buttonGroups.forEach(group => {
-        const category = group.dataset.category;
-        if (!category) return;
-        
-        // Get all selected buttons in this group
-        const selectedButtons = group.querySelectorAll('.filter-btn.selected');
-        const selectedValues = Array.from(selectedButtons).map(btn => btn.dataset.value);
-        
-        filters[category] = selectedValues;
-    });
-    
-    return filters;
-}
-
 // Function to populate filter buttons based on word type
 function populateFiltersForWordType(wordType) {
     // Clear existing filter sections (except wordType)
@@ -138,17 +88,6 @@ function applyDefaultSelections(wordType) {
         }
     }
 }
-
-// Initialize toolbar when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    initializeToolbar();
-    initializeWordTypeButtons();
-    // Initialize with noun filters by default
-    const nounButton = document.querySelector('[data-category="wordType"] [data-value="noun"]');
-    if (nounButton) {
-        nounButton.click();
-    }
-});
 
 startQuizBtn.addEventListener('click', startNewQuiz);
 submitBtn.addEventListener('click', submitAnswer);
@@ -380,10 +319,12 @@ async function applyLocalization() {
         console.error('Error loading localization:', error);
     }
 }
-
 // Apply localization when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    initializeToolbar();
     initializeWordTypeButtons();
-    applyLocalization(); // Add this line to apply translations on page load
+    const nounButton = document.querySelector('[data-category="wordType"] [data-value="noun"]');
+    if (nounButton) {
+        nounButton.click();
+    }
+    
 });
