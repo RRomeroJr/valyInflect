@@ -22,5 +22,13 @@
     "loading": {
         "en": "Loading...",
         "vl": "Leghas..."
+    },
+    "vl-localization-toggle": {
+        "en": "Dejos?",
+        "vl": "Dejos Daor."
+    },
+    "practice-toolbar-title": {
+        "en": "Practice Filters",
+        "vl": "Gaomōnno Remiapossa"
     }
 }
