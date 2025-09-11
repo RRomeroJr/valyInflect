@@ -61,20 +61,17 @@ body {
 }
 
 .info-btn {
-    background-color: var(--bg-darker);
+    background-color: var(--bg-dark);
     /* border-left: 1px solid var(--border-color); */
     /* border-right: 1px solid var(--border-color); */
     color: white;
     /* border: none;*/
-    border-radius: 0; /* Remove border radius */
     padding: 0px 20px; /* Horizontal padding only */
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s;
-    height: 100%; /* Fill the height of the info bar */
-    display: flex;
-    align-items: center; /* Center text vertically */
-    justify-content: center; /* Center text horizontally */
+    /* height: min(12dvh, 50px);  */
+    height: clamp(30px, 8dvh, 50px); 
     min-width: 80px; /* Minimum width for the button */
     margin: 0; /* Remove any default margins */
 }
@@ -130,7 +127,7 @@ button {
         margin-right: auto;
     }
     .sidebar{
-        border-left: 4px solid var(--accent-green);
+        border-right: 4px solid var(--accent-green);
         border-top: none; 
         width: min(28dvw, 240px);
         flex:none;

@@ -25,7 +25,7 @@ function populateFiltersForWordType(wordType) {
     // Clear existing filter sections (except wordType)
     const existingSections = practiceToolbar.querySelectorAll('.filter-section:not(:nth-of-type(1))');
     existingSections.forEach(section => section.remove());
-    
+    const filterContainer = practiceToolbar.querySelector('.filter-container');
     let filterElements = [];
     
     if (wordType === 'noun') {
@@ -38,7 +38,7 @@ function populateFiltersForWordType(wordType) {
     
     // Append all filter elements to the practice toolbar
     filterElements.forEach(element => {
-        practiceToolbar.appendChild(element);
+        filterContainer.appendChild(element);
     });
     
     // Apply default selections for the word type
@@ -222,10 +222,13 @@ function submitAnswer() {
         const userAnswer = answerInput.value.trim();
         // Normalize both answers for comparison
         const normalizedUserAnswer = normalizeText(userAnswer);
-        const normalizedCorrectAnswer = normalizeText(correctAnswer);
         
         // Compare the normalized answers case-insensitively
-        const isCorrect = normalizedUserAnswer.toLowerCase() === correctAnswer.toLowerCase();
+        // const isCorrect = normalizedUserAnswer.toLowerCase() === correctAnswer.toLowerCase();
+        const correctAnswers = correctAnswer.split("/").map(e => e.trim());
+        console.log('Correct answers:', correctAnswers);
+        const isCorrect =
+            correctAnswers.some(e => e.toLowerCase() === normalizedUserAnswer.toLowerCase());
         
         // Show feedback
         feedback.style.display = 'block';
@@ -234,7 +237,8 @@ function submitAnswer() {
         if (isCorrect) {
             feedback.innerHTML = `
                 <strong>✅ Correct!</strong><br>
-                Your answer: "${userAnswer}"
+                Your answer: "${userAnswer}"<br>
+                Correct answer: "${correctAnswer}"
             `;
         } else {
             feedback.innerHTML = `
@@ -262,7 +266,7 @@ function getSelectedFilters() {
     
     // Get all button groups with data-category attribute
     const buttonGroups = practiceToolbar.querySelectorAll('.button-group[data-category]');
-    
+    // console.log('Button groups:', buttonGroups);
     buttonGroups.forEach(group => {
         const category = group.dataset.category;
         if (category === 'wordType'){ // Only one button can be selected for wordType
@@ -281,7 +285,7 @@ function getSelectedFilters() {
 console.log("Selected Filters:", getSelectedFilters());
 
 // Language configuration
-let languageMode = 'hv'; // Default language is English
+let languageMode = 'en'; // Default language is English
 
 /**
  * Applies localization to all elements based on the current language mode
@@ -319,9 +323,25 @@ async function applyLocalization() {
         console.error('Error loading localization:', error);
     }
 }
+function toggleValyLocalization() {
+    if (languageMode === "vl"){
+        languageMode = 'en';
+    } else {
+        languageMode = 'vl';
+    }
+    applyLocalization();
+}
 // Apply localization when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     initializeWordTypeButtons();
+    if (languageMode !== 'en') {
+        applyLocalization();
+    }
+
+    const localizationToggle = /** @type {Button} */document.querySelector('.vl-localization-toggle');
+    if (localizationToggle) {
+        localizationToggle.addEventListener('click', toggleValyLocalization);
+    }
     const nounButton = document.querySelector('[data-category="wordType"] [data-value="noun"]');
     if (nounButton) {
         nounButton.click();
