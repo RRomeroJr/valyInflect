@@ -26,10 +26,10 @@ export const valueMappings = {
         'terrestrial/aquatic': 'ter/aq'
     },
     position: {
-        'prenominal': 'pre',
-        'postnominal': 'post'
+        'prepositive': 'prepos',
+        'postpositive': 'postpos'
     },
-        d_type: {
+    d_type: {
         'Positive': 'pos',
         'Equal': 'eq',
         'Comparative': 'comp',
@@ -67,8 +67,8 @@ export const displayMaps = {
         'n/a': 'n/a'
     },
     position: {
-        'pre': 'prepositive',
-        'post': 'postpositive'
+        'prepos': 'prepositive',
+        'postpos': 'postpositive'
     },
     d_type: {
         'pos': 'positive',

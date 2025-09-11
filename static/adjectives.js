@@ -5,14 +5,14 @@ const adjFilters = {
     case: ['nom', 'acc', 'gen', 'dat', 'loc', 'ins', 'com', 'voc', 'adv'],
     quantity: ['sing/col', 'pl/pau'],
     gender: ['lun', 'sol', 'ter', 'aq', 'lun/sol', 'ter/aq'],
-    position: ['pre', 'post'],
+    position: ['prepos', 'postpos'],
     d_type: ['pos', 'eq', 'comp', 'sup']
 };
 
 const adjFiltersPresets = {
     wordType: 'adjective',
     quantity: ['sing/col', 'pl/pau'],
-    position: ['pre', 'post']
+    position: ['prepos', 'postpos']
 };
 
 /**
