@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valyrian Word Generator</title>
+    <title>ValyInflect</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -22,15 +22,16 @@
 <!-- Main Content -->
 <div class="main-content">
     <div class="info-bar">
-        <button class="info-btn">Info</button>
+        <button class="info-btn">GitHub</button>
     </div>
     <div class="quiz-area">
-        <h1>🐉 Valyrian Word Quiz</h1>
-        <p>Test your knowledge of Valyrian declensions!</p>
+        <h1>🐉 Project: ValyInflect</h1>
+        <!-- <h1>Rīnilaksir: ValyInflect<br>🐉</h1> -->
+        <!-- <h1>🐉Verdilaksir: ValyInflect</h1> -->
+        <p>Now supporting nouns and <strong><u>adjectives!</u></strong></p>
         <button id="startQuizBtn">Start Quiz</button>
         <div id="quizDisplay" class="word-display" style="display: none;">
             <div id="questionText" class="word"></div>
-            <div id="questionDetails" class="details"></div>
             
             <div class="input-section">
                 <input type="text" id="answerInput" placeholder="Enter your answer..." />
@@ -40,6 +41,8 @@
                 <div id="feedback" class="feedback" style="display: none;"></div>
                 
                 <button id="nextQuestionBtn" style="display: none;">Next Question</button>
+                <div id="questionDetails" class="details"></div>
+
             </div>
             
             <div id="loading" class="loading" style="display: none;">
