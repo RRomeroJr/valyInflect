@@ -1,4 +1,10 @@
+// Import mapping functions and data
+import { valueMappings, mapValues, getDisplayValue } from './searchMaps.js?v=0.2';
+import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=0.2';
+import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=0.2';
+
 // Get references to HTML elements
+//#region HTML Element References
 const startQuizBtn = document.getElementById('startQuizBtn');
 const quizDisplay = document.getElementById('quizDisplay');
 const questionText = document.getElementById('questionText');
@@ -9,106 +15,85 @@ const feedback = document.getElementById('feedback');
 const nextQuestionBtn = document.getElementById('nextQuestionBtn');
 const loading = document.getElementById('loading');
 const practiceToolbar = document.getElementById('practiceToolbar');
+//#endregion
 
-// Store current quiz data and selected filters
+// Store current quiz data
 let currentQuiz = null;
-let selectedFilters = {
-    case: [],
-    quantity: [],
-    declension: [],
-    gender: []
-};
 
-// Map frontend values to database values
-const valueMappings = {
-    case: {
-        'nominative': 'nom',
-        'accusative': 'acc',
-        'genitive': 'gen',
-        'dative': 'dat',
-        'locative': 'loc',
-        'instrumental': 'ins',
-        'comitative': 'com',
-        'vocative': 'voc',
-        'adverbial': 'adv'  // Added adverbial case
-    },
-    quantity: {
-        'singular': 'sing',
-        'plural': 'pl',
-        'paucal': 'pau',
-        'collective': 'col'
-    },
-    // Map gender names to match database values
-    gender: {
-        'lunar': 'lun',
-        'solar': 'sol',
-        'terrestrial': 'ter',
-        'aquatic': 'aq'  // Changed from 'aqua' to 'aq' to match database
-    },
-    // These don't need mapping as they match the database
-    declension: {}
-};
-
-// Initialize toolbar functionality
-function initializeToolbar() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
+// Function to populate filter buttons based on word type
+function populateFiltersForWordType(wordType) {
+    // Clear existing filter sections (except wordType)
+    const existingSections = practiceToolbar.querySelectorAll('.filter-section:not(:nth-of-type(1))');
+    existingSections.forEach(section => section.remove());
+    const filterContainer = practiceToolbar.querySelector('.filter-container');
+    let filterElements = [];
     
-    // Use the global valueMappings
+    if (wordType === 'noun') {
+        // Get filter elements from nouns.js
+        filterElements = generateNounFilterElements();
+    } else if (wordType === 'adjective') {
+        // Get filter elements from adjectives.js
+        filterElements = generateAdjectiveFilterElements();
+    }
     
-    // Set default selections (using frontend values)
-    const defaultSelections = {
-        case: ['nominative', 'accusative', 'genitive', 'dative', 'locative', 'instrumental', 'comitative', 'vocative'],
-        quantity: ['singular', 'plural'],
-        declension: ['1st', '2nd', '3rd', '4th', '5th', '6th'],
-        gender: ['lunar', 'solar', 'terrestrial', 'aquatic']
-    };
-    
-    // Apply default selections
-    filterButtons.forEach(button => {
-        const category = button.dataset.category;
-        const value = button.dataset.value;
-        
-        if (defaultSelections[category] && defaultSelections[category].includes(value)) {
-            button.classList.add('selected');
-            if (!selectedFilters[category].includes(value)) {
-                selectedFilters[category].push(value);
-            }
-        }
-        
-        // Add click event listener
-        button.addEventListener('click', function() {
-            // Toggle selection
-            this.classList.toggle('selected');
-            
-            // Update selectedFilters array
-            if (this.classList.contains('selected')) {
-                if (!selectedFilters[category].includes(value)) {
-                    selectedFilters[category].push(value);
-                }
-            } else {
-                const index = selectedFilters[category].indexOf(value);
-                if (index > -1) {
-                    selectedFilters[category].splice(index, 1);
-                }
-            }
-            
-            console.log('Selected filters:', selectedFilters);
-        });
+    // Append all filter elements to the practice toolbar
+    filterElements.forEach(element => {
+        filterContainer.appendChild(element);
     });
     
-    console.log('Default filters applied:', selectedFilters);
+    // Apply default selections for the word type
+    applyDefaultSelections(wordType);
 }
 
-// Initialize toolbar when page loads
-document.addEventListener('DOMContentLoaded', initializeToolbar);
+// Add event listener for word type buttons
+function initializeWordTypeButtons() {
+    const wordTypeButtons = document.querySelectorAll('[data-category="wordType"] .filter-btn');
+    wordTypeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove selected class from all word type buttons
+            wordTypeButtons.forEach(btn => btn.classList.remove('selected'));
+            // Add selected class to clicked button
+            this.classList.add('selected');
+            // Populate filters for the selected word type
+            populateFiltersForWordType(this.dataset.value);
+        });
+    });
+}
 
-// Start quiz event listener
+// Function to apply default selections based on word type
+function applyDefaultSelections(wordType) {
+    let defaults = {};
+    
+    if (wordType === 'noun') {
+        defaults = {
+            ...nounFiltersPresets
+        };
+    } else if (wordType === 'adjective') {
+        defaults = {
+            ...adjFiltersPresets
+        };
+    }
+    
+    // Apply the defaults
+    for (const [category, values] of Object.entries(defaults)) {
+        if (Array.isArray(values)) {
+            // Find the button group with the matching data-category
+            const buttonGroup = document.querySelector(`.button-group[data-category="${category}"]`);
+            if (buttonGroup) {
+                // For each value, find the button with that data-value within this group
+                values.forEach(value => {
+                    const button = buttonGroup.querySelector(`.filter-btn[data-value="${value}"]`);
+                    if (button) {
+                        button.classList.add('selected');
+                    }
+                });
+            }
+        }
+    }
+}
+
 startQuizBtn.addEventListener('click', startNewQuiz);
-
-// Submit answer event listener
 submitBtn.addEventListener('click', submitAnswer);
-
-// Next question event listener
 nextQuestionBtn.addEventListener('click', startNewQuiz);
 
 // Enter key event listener for input field
@@ -130,42 +115,29 @@ async function startNewQuiz() {
     feedback.style.display = 'none';
     nextQuestionBtn.style.display = 'none';
     
-    // Log the current state of selected filters
-    console.log('Selected filters:', JSON.stringify(selectedFilters, null, 2));
+    // Get current filters from the UI
+    const currentFilters = getSelectedFilters();
+    console.log('Current filters:', JSON.stringify(currentFilters, null, 2));
     
     try {
-        // Build query parameters from selected filters
-        const params = new URLSearchParams();
+        // Build query parameters from selected filters based on word type
+        const _selectedFilters = getSelectedFilters();
+        let params = null;
+        let endpoint = '';
         
-        // Map frontend values to database values before sending to the server
-        const mapValues = (category, values) => {
-            const mapping = valueMappings[category] || {};
-            return values.map(v => {
-                const mapped = mapping[v];
-                console.log(`Mapping ${category} value: ${v} -> ${mapped || v}`);
-                return mapped !== undefined ? mapped : v;
-            });
-        };
-        
-        // Only add parameters that have selected values
-        if (selectedFilters.case.length > 0) {
-            const dbCases = mapValues('case', selectedFilters.case);
-            params.append('cases', dbCases.join(','));
-        }
-        if (selectedFilters.quantity.length > 0) {
-            const dbQuantities = mapValues('quantity', selectedFilters.quantity);
-            params.append('quantities', dbQuantities.join(','));
-        }
-        if (selectedFilters.declension.length > 0) {
-            params.append('declensions', selectedFilters.declension.join(','));
-        }
-        if (selectedFilters.gender.length > 0) {
-            const dbGenders = mapValues('gender', selectedFilters.gender);
-            params.append('genders', dbGenders.join(','));
+        if (_selectedFilters.wordType === 'noun') {
+            params = makeNounParams(currentFilters);
+            endpoint = '/noun-quiz-question';
+        } else if (_selectedFilters.wordType === 'adjective') {
+            params = makeAdjectiveParams(currentFilters);
+            endpoint = '/adj-quiz-question';
+        } else {
+            console.error('Unsupported word type in selected filters', _selectedFilters);
+            throw new Error(`Unsupported word type: ${_selectedFilters.wordType}`);
         }
         
         // Make request to get quiz question with filters
-        const url = `/quiz-question?${params.toString()}`;
+        const url = `${endpoint}?${params.toString()}`;
         console.log('Fetching quiz question with URL:', url);
         
         let data;
@@ -192,68 +164,32 @@ async function startNewQuiz() {
             console.error('Error from server:', data.error);
             questionText.textContent = 'Error loading quiz';
             questionDetails.textContent = data.error;
-        } else {
-            // Store quiz data
-            currentQuiz = data;
-            
-            // Map database values back to display values
-            const caseDisplayMap = {
-                'nom': 'nominative',
-                'acc': 'accusative',
-                'gen': 'genitive',
-                'dat': 'dative',
-                'loc': 'locative',
-                'ins': 'instrumental',
-                'com': 'comitative',
-                'voc': 'vocative',
-                'adv': 'adverbial'
-            };
-            
-            const quantityDisplayMap = {
-                'sing': 'singular',
-                'pl': 'plural',
-                'pau': 'paucal',
-                'col': 'collective'
-            };
-            
-            const genderDisplayMap = {
-                'lun': 'lunar',
-                'sol': 'solar',
-                'ter': 'terrestrial',
-                'aq': 'aquatic',  // Updated to match database
-                'lun/sol': 'lunar/solar',
-                'ter/aq': 'terrestrial/aquatic',
-                'n/a': 'n/a'
-            };
-            
-            const displayCase = caseDisplayMap[data.target_case] || data.target_case;
-            const displayQuantity = quantityDisplayMap[data.target_quantity] || data.target_quantity;
-            const displayGender = genderDisplayMap[data.gender] || data.gender;
-            
-            // Display the question with abbreviated forms
-            questionText.textContent = `What is the ${data.target_case}, ${data.target_quantity} of "${data.base_word}"?`;
-            questionDetails.innerHTML = `
-                <strong>Base word:</strong> ${data.base_word}<br>
-                <strong>Target case:</strong> ${displayCase}<br>
-                <strong>Target quantity:</strong> ${displayQuantity}<br>
-                <strong>Declension:</strong> ${data.declension}<br>
-                <strong>Gender:</strong> ${displayGender}
-            `;
-            
-            // Reset input and show submit button
-            answerInput.value = '';
-            submitBtn.style.display = 'inline-block';
+            return;
         }
+        
+        // Store and display quiz data based on word type
+        currentQuiz = null;
+        if (_selectedFilters.wordType === 'noun') {
+            currentQuiz = displayNounQuizQuestion(data, questionText, questionDetails);
+        } else if (_selectedFilters.wordType === 'adjective') {
+            currentQuiz = displayAdjectiveQuizQuestion(data, questionText, questionDetails);
+        } else {
+            console.error('Unsupported word type in display function', _selectedFilters);
+            throw new Error(`Unsupported word type in display function: ${_selectedFilters.wordType}`);
+        }
+        // Reset input and show submit button
+        answerInput.value = '';
+        submitBtn.style.display = 'inline-block';
         
         // Show the practice toolbar and quiz display
         console.log('Showing toolbar and quiz display');
-        practiceToolbar.style.display = 'block';
+        // practiceToolbar.style.display = 'block';
         quizDisplay.style.display = 'block';
         console.log('Toolbar display style:', practiceToolbar.style.display);
         
         // Focus input field after quiz display is shown
         if (currentQuiz) {
-            answerInput.focus();
+                answerInput.focus();
         }
         
     } catch (error) {
@@ -262,24 +198,16 @@ async function startNewQuiz() {
         questionDetails.textContent = 'Failed to fetch quiz question from server';
         practiceToolbar.style.display = 'block';
         quizDisplay.style.display = 'block';
+        throw error;
     }
 }
 
 function normalizeText(text) {
     if (!text) return '';
-    
-    // Convert to lowercase first
     let normalized = text.toLowerCase();
-    
+
     // Replace double vowels with macronized versions
-    const replacements = {
-        'aa': 'ā',
-        'ii': 'ī',
-        'ee': 'ē',
-        'oo': 'ō',
-        'uu': 'ū', 
-        'yy': 'ȳ'
-    };
+    const replacements = {'aa': 'ā', 'ii': 'ī', 'ee': 'ē', 'oo': 'ō', 'uu': 'ū', 'yy': 'ȳ'};
     
     // Replace all occurrences of double vowels
     for (const [pattern, replacement] of Object.entries(replacements)) {
@@ -291,42 +219,35 @@ function normalizeText(text) {
 }
 
 function submitAnswer() {
-    if (!currentQuiz || !answerInput.value.trim()) {
-        return;
-    }
-    
-    const userAnswer = answerInput.value.trim();
-    const correctAnswer = currentQuiz.correct_answer || '';
-    
+    // console.log('submitAnswer called');
     try {
+        const correctAnswer = currentQuiz.form;
+        const userAnswer = answerInput.value.trim();
         // Normalize both answers for comparison
         const normalizedUserAnswer = normalizeText(userAnswer);
-        const normalizedCorrectAnswer = normalizeText(correctAnswer);
         
         // Compare the normalized answers case-insensitively
-        const isCorrect = normalizedUserAnswer.toLowerCase() === correctAnswer.toLowerCase();
-        
-        // Create result object similar to what the server would return
-        const result = {
-            correct: isCorrect,
-            user_answer: userAnswer,
-            correct_answer: correctAnswer
-        };
+        // const isCorrect = normalizedUserAnswer.toLowerCase() === correctAnswer.toLowerCase();
+        const correctAnswers = correctAnswer.split("/").map(e => e.trim());
+        console.log('Correct answers:', correctAnswers);
+        const isCorrect =
+            correctAnswers.some(e => e.toLowerCase() === normalizedUserAnswer.toLowerCase());
         
         // Show feedback
         feedback.style.display = 'block';
-        feedback.className = 'feedback ' + (result.correct ? 'correct' : 'incorrect');
+        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
         
-        if (result.correct) {
+        if (isCorrect) {
             feedback.innerHTML = `
                 <strong>✅ Correct!</strong><br>
-                Your answer: "${result.user_answer}"
+                Your answer: "${userAnswer}"<br>
+                Correct answer: "${correctAnswer}"
             `;
         } else {
             feedback.innerHTML = `
                 <strong>❌ Incorrect</strong><br>
-                Your answer: "${result.user_answer}"<br>
-                Correct answer: "${result.correct_answer}"
+                Your answer: "${userAnswer}"<br>
+                Correct answer: "${correctAnswer}"
             `;
         }
         
@@ -338,6 +259,95 @@ function submitAnswer() {
     } catch (error) {
         feedback.style.display = 'block';
         feedback.className = 'feedback incorrect';
-        feedback.textContent = 'Error checking answer. Please try again.';
+        feedback.textContent = error.message;
+        throw error;
     }
 }
+
+function getSelectedFilters() {
+    const selectedFilters = {};
+    
+    // Get all button groups with data-category attribute
+    const buttonGroups = practiceToolbar.querySelectorAll('.button-group[data-category]');
+    // console.log('Button groups:', buttonGroups);
+    buttonGroups.forEach(group => {
+        const category = group.dataset.category;
+        if (category === 'wordType'){ // Only one button can be selected for wordType
+            const selectedButtons = group.querySelector('.filter-btn.selected');
+            if (selectedButtons){
+                selectedFilters[category] = selectedButtons.dataset.value;
+            }
+        } else { // Anything else get all the selected buttons
+            const selectedButtons = group.querySelectorAll('.filter-btn.selected');
+            selectedFilters[category] = Array.from(selectedButtons).map(button => button.dataset.value);
+        }
+    });
+    
+    return selectedFilters;
+}
+console.log("Selected Filters:", getSelectedFilters());
+
+// Language configuration
+let languageMode = 'en'; // Default language is English
+
+/**
+ * Applies localization to all elements based on the current language mode
+ * Looks for elements with IDs or classes that match keys in localization.json
+ */
+async function applyLocalization() {
+    try {
+        // Fetch the localization data
+        const response = await fetch('localization.json');
+        const translations = await response.json();
+        
+        // Process each translation key
+        Object.entries(translations).forEach(([key, languages]) => {
+            const text = languages[languageMode];
+            if (!text) return; // Skip if translation not available for current language
+            
+            // Try to find element by ID first
+            const elementById = document.getElementById(key);
+            if (elementById) {
+                elementById.innerHTML = text; // Use innerHTML to support HTML content
+                return;
+            }
+            
+            // If no element with matching ID, try class
+            const elementsByClass = document.getElementsByClassName(key);
+            if (elementsByClass.length > 0) {
+                Array.from(elementsByClass).forEach(el => {
+                    el.innerHTML = text; // Use innerHTML to support HTML content
+                });
+            }
+        });
+        
+        console.log(`Localization applied for language: ${languageMode}`);
+    } catch (error) {
+        console.error('Error loading localization:', error);
+    }
+}
+function toggleValyLocalization() {
+    if (languageMode === "vl"){
+        languageMode = 'en';
+    } else {
+        languageMode = 'vl';
+    }
+    applyLocalization();
+}
+// Apply localization when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initializeWordTypeButtons();
+    if (languageMode !== 'en') {
+        applyLocalization();
+    }
+
+    const localizationToggle = /** @type {Button} */document.querySelector('.vl-localization-toggle');
+    if (localizationToggle) {
+        localizationToggle.addEventListener('click', toggleValyLocalization);
+    }
+    const nounButton = document.querySelector('[data-category="wordType"] [data-value="noun"]');
+    if (nounButton) {
+        nounButton.click();
+    }
+    
+});
