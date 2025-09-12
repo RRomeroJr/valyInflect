@@ -35,8 +35,10 @@ body {
 .main-content {
     /* margin-left: 280px; Same as sidebar width */
     /* width: calc(100% - 280px); */
-    /* width: 100dvw; */
+    width: 100dvw;
     min-height: 100dvh;
+    padding-left: 30px;
+    padding-right: 30px;
     padding-bottom: 60px;
     box-sizing: border-box;
     background-color: var(--bg-container);
@@ -44,39 +46,46 @@ body {
     /* box-shadow: 0 0 10px var(--shadow-color); */
     text-align: center;
     position: relative;
-    
+    flex:1;
 }
 
 .info-bar {
     background-color: var(--bg-darker);
     box-shadow: 0 2px 5px var(--shadow-color);
-    border-radius: 5px 0 0 5px;
+    border-radius: 0px;
     /* margin: -30px -30px 20px -30px; */
     display: flex;
     justify-content: flex-end;
     position: relative;
     z-index: 2;
-    height: 50px; /* Fixed height for the info bar */
+    height: 51px; /* Fixed height for the info bar */
     overflow: hidden; /* Ensures child elements stay within bounds */
 }
 
 .info-btn {
-    background-color: var(--bg-darker);
+    background-color: var(--bg-dark);
     /* border-left: 1px solid var(--border-color); */
     /* border-right: 1px solid var(--border-color); */
     color: white;
     /* border: none;*/
-    border-radius: 0; /* Remove border radius */
     padding: 0px 20px; /* Horizontal padding only */
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s;
-    height: 100%; /* Fill the height of the info bar */
-    display: flex;
-    align-items: center; /* Center text vertically */
-    justify-content: center; /* Center text horizontally */
+    /* height: min(12dvh, 50px);  */
+    height: clamp(30px, 8dvh, 50px); 
     min-width: 80px; /* Minimum width for the button */
     margin: 0; /* Remove any default margins */
+
+}
+a.info-btn {
+    /* Makes a tag info-btns more like buttons */
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+    line-height: clamp(30px, 8dvh, 50px); /* should be the same as info-btn height */
+    box-sizing: border-box;
+    border-radius: 5px;
 }
 .info-btn:hover {
     background-color: var(--accent-green-hover);
@@ -121,14 +130,21 @@ button {
 
 }
 @media (aspect-ratio >= 0.82) {
+    body {
+        flex-direction: row;
+    }
     .word-display {
-        max-width: 820px;
+        max-width: 780px;
         margin-left: auto;
         margin-right: auto;
     }
     .sidebar{
         border-right: 4px solid var(--accent-green);
         border-top: none; 
+        width: min(28dvw, 240px);
+        flex:none;
+    }
+    .main-content {
     }
 }
 
@@ -313,7 +329,7 @@ p {
         margin-top: 0;
         border-top-left-radius: 0;
         border-top-right-radius: 0;
-    } */
+    } 
 } */
 
 /* Animation for correct/incorrect feedback */

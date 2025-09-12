@@ -1,0 +1,34 @@
+{
+    "main-title": {
+        "en": "🐉 Project: ValyInflect",
+        "vl": "🐉 Verdilaksir: ValyInflect"
+    },
+    "main-details": {
+        "en": "Now supporting nouns and <strong><u>adjectives!</u></strong>",
+        "vl": "Sīr naunissi se <strong><u>adjetīvossī!</u></strong>"
+    },
+    "startQuizBtn": {
+        "en": "Start Quiz",
+        "vl": "Iderennī Pradagon"
+    },
+    "submitBtn": {
+        "en": "Submit Answer",
+        "vl": "Udlinon Jikagon"
+    },
+    "nextQuestionBtn": {
+        "en": "Next Question",
+        "vl": "Hembār"
+    },
+    "loading": {
+        "en": "Loading...",
+        "vl": "Leghas..."
+    },
+    "vl-localization-toggle": {
+        "en": "Dejos?",
+        "vl": "Dejos Daor."
+    },
+    "practice-toolbar-title": {
+        "en": "Practice Filters",
+        "vl": "Gaomōnno Remiapossa"
+    }
+}

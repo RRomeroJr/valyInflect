@@ -9,26 +9,29 @@
 <body>
     <!-- Sidebar -->
 <div id="practiceToolbar" class="sidebar">
-    <h3>Practice Filters</h3>
-    <div class="filter-section">
-        <h4>Word Type</h4>
-        <div class="button-group" data-category="wordType">
-            <button class="filter-btn" data-value="noun">Noun</button>
-            <button class="filter-btn" data-value="adjective">Adjective</button>
+    <h3 id="practice-toolbar-title">Practice Filters</h3>
+    <div class="filter-container">
+        <div class="filter-section">
+            <h4>Word Type</h4>
+            <div class="button-group" data-category="wordType">
+                <button class="filter-btn" data-value="noun">Noun</button>
+                <button class="filter-btn" data-value="adjective">Adjective</button>
+            </div>
         </div>
     </div>
+    <div class="button-group">
+        <a class="info-btn" href="https://github.com/RRomeroJr/valyInflect">GitHub</a>
+        <button class="info-btn vl-localization-toggle">Drejos?</button>
+    </div>  
 </div>
 
 <!-- Main Content -->
 <div class="main-content">
-    <div class="info-bar">
-        <button class="info-btn">GitHub</button>
-    </div>
     <div class="quiz-area">
-        <h1>🐉 Project: ValyInflect</h1>
+        <h1 class="main-title">🐉 Project: ValyInflect</h1>
         <!-- <h1>Rīnilaksir: ValyInflect<br>🐉</h1> -->
         <!-- <h1>🐉Verdilaksir: ValyInflect</h1> -->
-        <p>Now supporting nouns and <strong><u>adjectives!</u></strong></p>
+        <p class="main-details">Now supporting nouns and <strong><u>adjectives!</u></strong></p>
         <button id="startQuizBtn">Start Quiz</button>
         <div id="quizDisplay" class="word-display" style="display: none;">
             <div id="questionText" class="word"></div>

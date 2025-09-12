@@ -1,5 +1,5 @@
 // Import mapping functions and data
-import { valueMappings, defaultSelections, mapValues, getDisplayValue } from './searchMaps.js?v=0.2';
+import { valueMappings, mapValues, getDisplayValue } from './searchMaps.js?v=0.2';
 import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=0.2';
 import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=0.2';
 
@@ -20,62 +20,12 @@ const practiceToolbar = document.getElementById('practiceToolbar');
 // Store current quiz data
 let currentQuiz = null;
 
-// Initialize toolbar functionality
-function initializeToolbar() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    
-    // Apply default selections
-    filterButtons.forEach(button => {
-        const category = button.dataset.category;
-        const value = button.dataset.value;
-        
-        if (defaultSelections[category] && defaultSelections[category].includes(value)) {
-            button.classList.add('selected');
-        }
-        
-        // Add click event listener
-        button.addEventListener('click', function() {
-            // Toggle selection
-            this.classList.toggle('selected');
-            
-            // Log current filter state
-            console.log('Selected filters:', getSelectedFilters());
-        });
-    });
-    
-    console.log('Default filters applied:', getSelectedFilters());
-}
-
-/**
- * Collects all selected filter values from the sidebar
- * @returns {Object} An object where keys are filter categories and values are arrays of selected values
- */
-function getFilters() {
-    const filters = {};
-    
-    // Find all button groups in the filter section
-    const buttonGroups = document.querySelectorAll('#filter-section .button-group');
-    
-    buttonGroups.forEach(group => {
-        const category = group.dataset.category;
-        if (!category) return;
-        
-        // Get all selected buttons in this group
-        const selectedButtons = group.querySelectorAll('.filter-btn.selected');
-        const selectedValues = Array.from(selectedButtons).map(btn => btn.dataset.value);
-        
-        filters[category] = selectedValues;
-    });
-    
-    return filters;
-}
-
 // Function to populate filter buttons based on word type
 function populateFiltersForWordType(wordType) {
     // Clear existing filter sections (except wordType)
     const existingSections = practiceToolbar.querySelectorAll('.filter-section:not(:nth-of-type(1))');
     existingSections.forEach(section => section.remove());
-    
+    const filterContainer = practiceToolbar.querySelector('.filter-container');
     let filterElements = [];
     
     if (wordType === 'noun') {
@@ -88,7 +38,7 @@ function populateFiltersForWordType(wordType) {
     
     // Append all filter elements to the practice toolbar
     filterElements.forEach(element => {
-        practiceToolbar.appendChild(element);
+        filterContainer.appendChild(element);
     });
     
     // Apply default selections for the word type
@@ -116,12 +66,10 @@ function applyDefaultSelections(wordType) {
     
     if (wordType === 'noun') {
         defaults = {
-            ...defaultSelections,
             ...nounFiltersPresets
         };
     } else if (wordType === 'adjective') {
         defaults = {
-            ...defaultSelections,
             ...adjFiltersPresets
         };
     }
@@ -129,26 +77,20 @@ function applyDefaultSelections(wordType) {
     // Apply the defaults
     for (const [category, values] of Object.entries(defaults)) {
         if (Array.isArray(values)) {
-            values.forEach(value => {
-                const button = document.querySelector(`[data-category="${category}"][data-value="${value}"]`);
-                if (button) {
-                    button.classList.add('selected');
-                }
-            });
+            // Find the button group with the matching data-category
+            const buttonGroup = document.querySelector(`.button-group[data-category="${category}"]`);
+            if (buttonGroup) {
+                // For each value, find the button with that data-value within this group
+                values.forEach(value => {
+                    const button = buttonGroup.querySelector(`.filter-btn[data-value="${value}"]`);
+                    if (button) {
+                        button.classList.add('selected');
+                    }
+                });
+            }
         }
     }
 }
-
-// Initialize toolbar when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    initializeToolbar();
-    initializeWordTypeButtons();
-    // Initialize with noun filters by default
-    const nounButton = document.querySelector('[data-category="wordType"] [data-value="noun"]');
-    if (nounButton) {
-        nounButton.click();
-    }
-});
 
 startQuizBtn.addEventListener('click', startNewQuiz);
 submitBtn.addEventListener('click', submitAnswer);
@@ -283,10 +225,13 @@ function submitAnswer() {
         const userAnswer = answerInput.value.trim();
         // Normalize both answers for comparison
         const normalizedUserAnswer = normalizeText(userAnswer);
-        const normalizedCorrectAnswer = normalizeText(correctAnswer);
         
         // Compare the normalized answers case-insensitively
-        const isCorrect = normalizedUserAnswer.toLowerCase() === correctAnswer.toLowerCase();
+        // const isCorrect = normalizedUserAnswer.toLowerCase() === correctAnswer.toLowerCase();
+        const correctAnswers = correctAnswer.split("/").map(e => e.trim());
+        console.log('Correct answers:', correctAnswers);
+        const isCorrect =
+            correctAnswers.some(e => e.toLowerCase() === normalizedUserAnswer.toLowerCase());
         
         // Show feedback
         feedback.style.display = 'block';
@@ -295,7 +240,8 @@ function submitAnswer() {
         if (isCorrect) {
             feedback.innerHTML = `
                 <strong>✅ Correct!</strong><br>
-                Your answer: "${userAnswer}"
+                Your answer: "${userAnswer}"<br>
+                Correct answer: "${correctAnswer}"
             `;
         } else {
             feedback.innerHTML = `
@@ -323,7 +269,7 @@ function getSelectedFilters() {
     
     // Get all button groups with data-category attribute
     const buttonGroups = practiceToolbar.querySelectorAll('.button-group[data-category]');
-    
+    // console.log('Button groups:', buttonGroups);
     buttonGroups.forEach(group => {
         const category = group.dataset.category;
         if (category === 'wordType'){ // Only one button can be selected for wordType
@@ -340,3 +286,68 @@ function getSelectedFilters() {
     return selectedFilters;
 }
 console.log("Selected Filters:", getSelectedFilters());
+
+// Language configuration
+let languageMode = 'en'; // Default language is English
+
+/**
+ * Applies localization to all elements based on the current language mode
+ * Looks for elements with IDs or classes that match keys in localization.json
+ */
+async function applyLocalization() {
+    try {
+        // Fetch the localization data
+        const response = await fetch('localization.json');
+        const translations = await response.json();
+        
+        // Process each translation key
+        Object.entries(translations).forEach(([key, languages]) => {
+            const text = languages[languageMode];
+            if (!text) return; // Skip if translation not available for current language
+            
+            // Try to find element by ID first
+            const elementById = document.getElementById(key);
+            if (elementById) {
+                elementById.innerHTML = text; // Use innerHTML to support HTML content
+                return;
+            }
+            
+            // If no element with matching ID, try class
+            const elementsByClass = document.getElementsByClassName(key);
+            if (elementsByClass.length > 0) {
+                Array.from(elementsByClass).forEach(el => {
+                    el.innerHTML = text; // Use innerHTML to support HTML content
+                });
+            }
+        });
+        
+        console.log(`Localization applied for language: ${languageMode}`);
+    } catch (error) {
+        console.error('Error loading localization:', error);
+    }
+}
+function toggleValyLocalization() {
+    if (languageMode === "vl"){
+        languageMode = 'en';
+    } else {
+        languageMode = 'vl';
+    }
+    applyLocalization();
+}
+// Apply localization when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initializeWordTypeButtons();
+    if (languageMode !== 'en') {
+        applyLocalization();
+    }
+
+    const localizationToggle = /** @type {Button} */document.querySelector('.vl-localization-toggle');
+    if (localizationToggle) {
+        localizationToggle.addEventListener('click', toggleValyLocalization);
+    }
+    const nounButton = document.querySelector('[data-category="wordType"] [data-value="noun"]');
+    if (nounButton) {
+        nounButton.click();
+    }
+    
+});
