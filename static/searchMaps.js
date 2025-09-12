@@ -33,7 +33,7 @@ export const valueMappings = {
         'Positive': 'pos',
         'Equal': 'eq',
         'Comparative': 'comp',
-        'Superlative': 'sup'
+        'Superlative': 'super'
     },
     declension: {}
 };
@@ -74,7 +74,7 @@ export const displayMaps = {
         'pos': 'positive',
         'eq': 'equative',
         'comp': 'comparative',
-        'sup': 'superlative',
+        'super': 'superlative',
     }
 };
 

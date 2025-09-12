@@ -6,7 +6,7 @@ const adjFilters = {
     quantity: ['sing/col', 'pl/pau', 'n/a'],
     gender: ['lun', 'sol', 'ter', 'aq', 'lun/sol', 'ter/aq'],
     position: ['prepos', 'postpos'],
-    d_type: ['pos', 'eq', 'comp', 'sup']
+    d_type: ['pos', 'eq', 'comp', 'super']
 };
 
 const adjFiltersPresets = {

@@ -261,7 +261,7 @@ async def get_adj_quiz(
     - genders: Comma-separated list of genders to include (e.g., 'lun,sol')
     - quants: Comma-separated list of quantities to include (e.g., 'sing,pl')
     - cases: Comma-separated list of cases to include (e.g., 'nom,acc')
-    - adj_d_types: Comma-separated list of adjective degree types (e.g., 'pos,comp,sup')
+    - adj_d_types: Comma-separated list of adjective degree types (e.g., 'pos,comp,super')
     """
     try:
         # Convert comma-separated strings to lists and filter out empty strings
