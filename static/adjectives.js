@@ -3,7 +3,7 @@ import { getDisplayValue } from "./searchMaps.js?v=0.2";
 const adjFilters = {
     class: ["1", "2", "3"],
     case: ['nom', 'acc', 'gen', 'dat', 'loc', 'ins', 'com', 'voc', 'adv'],
-    quantity: ['sing/col', 'pl/pau'],
+    quantity: ['sing/col', 'pl/pau', 'n/a'],
     gender: ['lun', 'sol', 'ter', 'aq', 'lun/sol', 'ter/aq'],
     position: ['prepos', 'postpos'],
     d_type: ['pos', 'eq', 'comp', 'sup']
@@ -11,8 +11,7 @@ const adjFilters = {
 
 const adjFiltersPresets = {
     wordType: 'adjective',
-    quantity: ['sing/col', 'pl/pau'],
-    position: ['prepos', 'postpos']
+    d_type: ['pos'],
 };
 
 /**

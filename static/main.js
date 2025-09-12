@@ -1,5 +1,5 @@
 // Import mapping functions and data
-import { valueMappings, defaultSelections, mapValues, getDisplayValue } from './searchMaps.js?v=0.2';
+import { valueMappings, mapValues, getDisplayValue } from './searchMaps.js?v=0.2';
 import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=0.2';
 import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=0.2';
 
@@ -66,12 +66,10 @@ function applyDefaultSelections(wordType) {
     
     if (wordType === 'noun') {
         defaults = {
-            ...defaultSelections,
             ...nounFiltersPresets
         };
     } else if (wordType === 'adjective') {
         defaults = {
-            ...defaultSelections,
             ...adjFiltersPresets
         };
     }
@@ -79,12 +77,17 @@ function applyDefaultSelections(wordType) {
     // Apply the defaults
     for (const [category, values] of Object.entries(defaults)) {
         if (Array.isArray(values)) {
-            values.forEach(value => {
-                const button = document.querySelector(`[data-category="${category}"][data-value="${value}"]`);
-                if (button) {
-                    button.classList.add('selected');
-                }
-            });
+            // Find the button group with the matching data-category
+            const buttonGroup = document.querySelector(`.button-group[data-category="${category}"]`);
+            if (buttonGroup) {
+                // For each value, find the button with that data-value within this group
+                values.forEach(value => {
+                    const button = buttonGroup.querySelector(`.filter-btn[data-value="${value}"]`);
+                    if (button) {
+                        button.classList.add('selected');
+                    }
+                });
+            }
         }
     }
 }

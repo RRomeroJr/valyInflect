@@ -78,16 +78,6 @@ export const displayMaps = {
     }
 };
 
-// Default selections for filters
-export const defaultSelections = {
-    case: ['nominative', 'accusative', 'genitive', 'dative', 'locative', 'instrumental', 'comitative', 'vocative'],
-    quantity: ['singular', 'plural', 'paucal', 'collective'],
-    declension: ['1st', '2nd', '3rd', '4th', '5th', '6th'],
-    gender: ['lunar', 'solar', 'terrestrial', 'aquatic', 'lunar/solar', 'terrestrial/aquatic'],
-    position: ['prepositive', 'postpositive'],
-    d_type: ['positive', 'equative', 'comparative', 'superlative']
-};
-
 // Helper function to map values using the appropriate mapping
 export function mapValues(category, values, toDb = true) {
     const mapping = toDb ? valueMappings[category] : displayMaps[category];
