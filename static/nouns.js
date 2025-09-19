@@ -1,4 +1,4 @@
-import { getDisplayValue } from "./searchMaps.js?v=0.2";
+import { getDisplayValue } from "./searchMaps.js?v=0.2.1";
 const nounFilters = {
     case: ['nom', 'acc', 'gen', 'dat', 'loc', 'ins', 'com', 'voc'],
     quantity: ['sing', 'pl', 'pau', 'col'],
