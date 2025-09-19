@@ -97,7 +97,7 @@ def get_random_word():
         }
     return None
 
-def get_noun_form(cases=None, quants=None, declens=None, genders=None):
+def get_noun_form(cases=None, quants=None, declens=None, genders=None, declen_subtypes=None):
     """Get a quiz question with optional filters for case, quantity, declension, and gender"""
     args = locals()
     print(args)
@@ -105,19 +105,28 @@ def get_noun_form(cases=None, quants=None, declens=None, genders=None):
     cursor = conn.cursor()
     
     # Build the base query with filters
-    query = """
-        SELECT DISTINCT n.id, n.base, n.declen, n.gender, nf.g_case, nf.quant, nf.form
-        FROM nouns n
-        JOIN noun_forms nf ON n.id = nf.noun_id
-        WHERE nf.form != n.base
-    """
+    # not using += because i've had problems with it before. idk why
+    query = """SELECT DISTINCT n.id, n.base, n.declen, n.gender, nf.g_case, nf.quant, nf.form"""
+    if declen_subtypes:
+        query = query + ", GROUP_CONCAT(ns.subtype_name, ',') as subtype_names"
+    query = query + """
+FROM nouns n
+JOIN noun_forms nf ON n.id = nf.noun_id"""
+    if declen_subtypes:
+        query = query + "\nJOIN noun_subtypes ns ON n.id = ns.noun_id"
+    query = query + "\nWHERE nf.form != n.base"
     
     params = []
-    for k,v in args.items():
+    for k in args.keys():
+        if k == "declens" or k == "declen_subtypes": continue
         if args[k] and len(args[k]) > 0:
             table = "noun_forms"
             short = "nf"
             fk = get_foreign_key_column(table, k)
+            if not fk:
+                table = "noun_subtypes"
+                short = "ns"
+                fk = get_foreign_key_column(table, k)
             if not fk:
                 table = "nouns"
                 short = "n"
@@ -128,13 +137,28 @@ def get_noun_form(cases=None, quants=None, declens=None, genders=None):
                 return None
             print(args[k], len(args[k]))
             placeholders = ",".join(["?"] * len(args[k]))
-            query += f" AND {short}.{fk} IN ({placeholders})"
+            query += f"\nAND {short}.{fk} IN ({placeholders})"
             params.extend(args[k])
+    declens_subtypes_args = list() 
+    if declens:
+        placeholders = ",".join(["?"] * len(declens))
+        declens_subtypes_args.append(f"n.declen IN ({placeholders})")
+        params.extend(declens)
+    if declen_subtypes:
+        placeholders = ",".join(["?"] * len(declen_subtypes))
+        declens_subtypes_args.append(f"ns.subtype_name IN ({placeholders})")
+        params.extend(declen_subtypes)
+
+    if len(declens_subtypes_args) > 0:
+        query += "\nAND (" + " OR ".join(declens_subtypes_args) + ")"
     
     # Add ordering and limit
-    query += " ORDER BY RANDOM() LIMIT 1"
+    query += "\nGROUP BY n.id, n.base, n.declen, n.gender, nf.g_case, nf.quant, nf.form"
+    # Add ordering and limit
+    query += "\nORDER BY RANDOM() LIMIT 1;"
     
     # Execute the query
+    print(query)
     cursor.execute(query, params)
     base_result = cursor.fetchone()
     
@@ -163,7 +187,8 @@ async def get_noun_quiz(
     cases: str = "",
     quants: str = "",
     declens: str = "",
-    genders: str = ""
+    genders: str = "",
+    declen_subtypes: str = ""
 ):
     """API endpoint that returns a quiz question with optional filters
     
@@ -171,7 +196,8 @@ async def get_noun_quiz(
     - cases: Comma-separated list of cases to include (e.g., 'nom,acc')
     - quants: Comma-separated list of quantities to include (e.g., 'sing,pl')
     - declens: Comma-separated list of declensions to include (e.g., '1st,2nd,3rd')
-    - genders: Comma-separated list of genders to include (e.g., 'lun,sol')
+    - genders: Comma-separated list of genders to include (e.g., 'lun,sol') 
+    - declen_subtypes: Comma-separated list of declension subtypes to include (e.g., '1st_a,1st_ia')
     """
     try:
         # Convert comma-separated strings to lists, filtering out empty strings
@@ -179,15 +205,16 @@ async def get_noun_quiz(
         quantity_list = [q.strip() for q in quants.split(",") if q.strip()]
         declension_list = [d.strip() for d in declens.split(",") if d.strip()]
         gender_list = [g.strip() for g in genders.split(",") if g.strip()]
-        
+        declen_subtypes_list = [s.strip() for s in declen_subtypes.split(",") if s.strip()]
         logging.info(f"Fetching quiz question with filters - cases: {case_list}, quantities: {quantity_list}, "
-                   f"declensions: {declension_list}, genders: {gender_list}")
-        
+                   f"declensions: {declension_list}, genders: {gender_list}, subtypes: {declen_subtypes_list}")
+
         quiz_data = get_noun_form(
             cases=case_list,
             quants=quantity_list,
             declens=declension_list,
-            genders=gender_list
+            genders=gender_list,
+            declen_subtypes=declen_subtypes_list
         )
         
         if quiz_data:
@@ -294,11 +321,19 @@ async def get_adj_quiz(
             "error": "An error occurred while fetching an adjective quiz question",
             "details": str(e)
         }
-if __name__ == "__main__":
 
-    # print(get_foreign_key_column("adj_forms", "adj_positions"))
-    # print(COLUMN_TABLES["id"])
-    # print(get_adj_quiz_question(cases=["voc"]))
+async def subtype_test():
+    res = await get_noun_quiz(
+        declens="4th",
+        declen_subtypes="1st_ia, 2nd_y"
+    )
+    if res:
+        print({k: res[k] for k in res.keys()})
+    else:
+        print("No result")
+if __name__ == "__main__":
+    # import asyncio
+    # asyncio.run(subtype_test())
     # sys.exit()
     
     import uvicorn

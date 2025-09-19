@@ -1,7 +1,7 @@
 // Import mapping functions and data
-import { valueMappings, mapValues, getDisplayValue } from './searchMaps.js?v=0.2';
-import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=0.2';
-import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=0.2';
+import { valueMappings, mapValues, getDisplayValue } from './searchMaps.js?v=0.2.1';
+import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=0.2.1';
+import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=0.2.1';
 
 // Get references to HTML elements
 //#region HTML Element References
@@ -297,7 +297,7 @@ let languageMode = 'en'; // Default language is English
 async function applyLocalization() {
     try {
         // Fetch the localization data
-        const response = await fetch('localization.json');
+        const response = await fetch('localization.json?v=0.2.1');
         const translations = await response.json();
         
         // Process each translation key
