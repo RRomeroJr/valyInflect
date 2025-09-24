@@ -10,7 +10,12 @@ const nounFilters = {
         '3rd_changing_h', '1st_a', '6th_i', '3rd_changing_e', '5th_i', '3rd_changing_d', 
         '1st_ar', '3rd_changing_b', '4th_es', '1st_changing_b', '4th_ien', '3rd_on', 
         '3rd_changing_l', '4th_e', '3rd_os', '3rd_o', '1st_ia'
-    ]
+    ].sort()
+    // '5th_ir', '3rd_changing_k', '3rd_io', '1st_changing_d', '3rd_changing_v', 
+    // '3rd_changing_n', '2nd_y', '3rd_ion', '5th_is', '3rd_or', '2nd_ys', 
+    // '3rd_changing_h', '1st_a', '6th_i', '3rd_changing_e', '5th_i', '3rd_changing_d', 
+    // '1st_ar', '3rd_changing_b', '4th_es', '1st_changing_b', '4th_ien', '3rd_on', 
+    // '3rd_changing_l', '4th_e', '3rd_os', '3rd_o', '1st_ia'
 };
 const nounFiltersPresets = {
     wordType: 'noun',
