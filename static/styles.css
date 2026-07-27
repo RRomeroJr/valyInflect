@@ -93,6 +93,11 @@ a.info-btn {
     box-shadow: none;
 }
 
+.info-btn.selected {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green-hover);
+}
+
 h1 {
     color: var(--accent-green);
     margin-bottom: 30px;
