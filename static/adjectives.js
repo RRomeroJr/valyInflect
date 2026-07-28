@@ -1,4 +1,4 @@
-import { getDisplayValue } from "./searchMaps.js?v=0.2.1";
+import { getDisplayValue } from "./searchMaps.js?v=1.0";
 
 const adjFilters = {
     class: ["1", "2", "3"],
