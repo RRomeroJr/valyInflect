@@ -1,4 +1,4 @@
-import { getDisplayValue } from "./searchMaps.js?v=0.2.1";
+import { getDisplayValue } from "./searchMaps.js?v=1.0";
 
 const adjFilters = {
     class: ["1", "2", "3"],
@@ -14,22 +14,44 @@ const adjFiltersPresets = {
     d_type: ['pos'],
 };
 
+// Resolves a merged gender value (e.g. 'lun/sol') returned by the DB down to a single
+// concrete gender, based on which of the two underlying genders are selected in the filters.
+function getQuizDisplayGender(gender, selectedGenders = []) {
+    const pickBetween = (a, b) => {
+        const hasA = selectedGenders.includes(a);
+        const hasB = selectedGenders.includes(b);
+        if (hasA && !hasB) return a;
+        if (hasB && !hasA) return b;
+        return Math.random() < 0.5 ? a : b;
+    };
+    if (gender === 'lun/sol') return pickBetween('lun', 'sol');
+    if (gender === 'ter/aq') return pickBetween('ter', 'aq');
+    return gender;
+}
+
+function getQuizDisplayQuantity(quantity) {
+    if (quantity === 'sing/col') return Math.random() < 0.5 ? 'sing' : 'col';
+    if (quantity === 'pl/pau') return Math.random() < 0.5 ? 'pl' : 'pau';
+    return quantity;
+}
+
 /**
  * Displays the quiz question with details for adjectives
  * @param {Object} data - The quiz data object
  * @param {HTMLElement} questionText - The element to display the question
  * @param {HTMLElement} questionDetails - The element to display the question details
+ * @param {string[]} selectedGenders - The gender values currently selected in the filters
  * @returns {Object} The current quiz data
  */
-function displayAdjectiveQuizQuestion(data, questionText, questionDetails) {
+function displayAdjectiveQuizQuestion(data, questionText, questionDetails, selectedGenders = []) {
     // Store quiz data
     const currentQuiz = data;
-    
+
     // Get display values using the mapping function
     const displayClass = data.class;
     const displayCase = data.g_case;
-    const displayQuantity = data.quant;
-    const displayGender = data.gender;
+    const displayQuantity = getQuizDisplayQuantity(data.quant);
+    const displayGender = getQuizDisplayGender(data.gender, selectedGenders);
     const displayPosition = data.pos;
     const displayDType = getDisplayValue('d_type', data.d_type) || data.d_type;
 
@@ -78,7 +100,14 @@ function makeAdjectiveParams(currentFilters) {
         params.append('quants', currentFilters.quantity.join(','));
     }
     if (currentFilters.gender?.length > 0) {
-        params.append('genders', currentFilters.gender.join(','));
+        const genders = new Set(currentFilters.gender);
+        if (genders.has('lun') || genders.has('sol')) {
+            genders.add('lun/sol');
+        }
+        if (genders.has('ter') || genders.has('aq')) {
+            genders.add('ter/aq');
+        }
+        params.append('genders', Array.from(genders).join(','));
     }
     if (currentFilters.position?.length > 0) {
         params.append('positions', currentFilters.position.join(','));

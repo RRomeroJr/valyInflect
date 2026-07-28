@@ -1,7 +1,7 @@
 // Import mapping functions and data
-import { valueMappings, mapValues, getDisplayValue } from './searchMaps.js?v=0.2.1';
-import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=0.2.1';
-import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=0.2.1';
+import { valueMappings, mapValues, getDisplayValue } from './searchMaps.js?v=1.0';
+import { nounFilters, nounFiltersPresets, displayQuizQuestion as displayNounQuizQuestion, makeNounParams, generateNounFilterElements } from './nouns.js?v=1.0';
+import { adjFilters, adjFiltersPresets, displayAdjectiveQuizQuestion, makeAdjectiveParams, generateAdjectiveFilterElements } from './adjectives.js?v=1.0';
 
 // Get references to HTML elements
 //#region HTML Element References
@@ -172,7 +172,7 @@ async function startNewQuiz() {
         if (_selectedFilters.wordType === 'noun') {
             currentQuiz = displayNounQuizQuestion(data, questionText, questionDetails);
         } else if (_selectedFilters.wordType === 'adjective') {
-            currentQuiz = displayAdjectiveQuizQuestion(data, questionText, questionDetails);
+            currentQuiz = displayAdjectiveQuizQuestion(data, questionText, questionDetails, currentFilters.gender);
         } else {
             console.error('Unsupported word type in display function', _selectedFilters);
             throw new Error(`Unsupported word type in display function: ${_selectedFilters.wordType}`);
@@ -297,7 +297,7 @@ let languageMode = 'en'; // Default language is English
 async function applyLocalization() {
     try {
         // Fetch the localization data
-        const response = await fetch('localization.json?v=0.2.1');
+        const response = await fetch('localization.json?v=1.0');
         const translations = await response.json();
         
         // Process each translation key
