@@ -297,7 +297,7 @@ let languageMode = 'en'; // Default language is English
 async function applyLocalization() {
     try {
         // Fetch the localization data
-        const response = await fetch('localization.json?v=1.0.1');
+        const response = await fetch('localization.json?v=1.0.2');
         const translations = await response.json();
         
         // Process each translation key
